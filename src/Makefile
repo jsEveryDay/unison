@@ -18,6 +18,7 @@ NATIVE=true
 # if the -with-pthreads configuration option was not used.)
 THREADS=false
 
+
 # User interface style.  For legal values, see Makefile.OCaml.
 # You probably don't need to set this yourself -- it will be set to
 # an appropriate value automatically, depending on whether the lablgtk
@@ -66,12 +67,15 @@ STATIC=false
 include Makefile.OCaml
 
 ######################################################################
-# Installation
+# Installation - Tested on Centos 7
 
-INSTALLDIR = $(HOME)/bin/
+# Why home? see $(exec_prefix)/bin on ftp://ftp.gnu.org/old-gnu/Manuals/make-3.79.1/html_chapter/make_14.html
+INSTALLDIR = /usr/local/bin/
 
 # This has two names because on OSX the file INSTALL shadows the target 'install'!
 install: doinstall
+	@echo "Dependencies required - ocaml ocaml-camlp4-devel ctags ctags-etags";
+	@echo
 
 installtext:
 	$(MAKE) -C .. installtext
@@ -79,16 +83,31 @@ installtext:
 text:
 	$(MAKE) -C .. text
 
+define colorecho
+      @tput setaf 6
+      @echo $1
+      @tput sgr0
+endef
+
 # Note that this is not needed (and doesn't work) for the OSX GUI version.
 # Just copy $(UIMACDIR)/build/Default/Unison.app to where you want it.
+
+# why move it to tmp? INSTALLDIR has ending slash / so this results in /root/bin//uni.. cannot resolve in EL7
+# -mv $(INSTALLDIR)/$(NAME)$(EXEC_EXT) /tmp/$(NAME)-$(shell echo $$$$)
+# Why do we need 2 binaries? I guess for version testing during dev?
+# cp $(NAME)$(EXEC_EXT) $(INSTALLDIR)$(NAME)-$(MAJORVERSION)$(EXEC_EXT)
 doinstall: buildexecutable
 	@if [ ! $(NAME) ]; then \
 	    echo "makefile variable NAME not bound"; \
 	    exit 1 \
 	  ; fi
-	-mv $(INSTALLDIR)/$(NAME)$(EXEC_EXT) /tmp/$(NAME)-$(shell echo $$$$)
 	cp $(NAME)$(EXEC_EXT) $(INSTALLDIR)
-	cp $(NAME)$(EXEC_EXT) $(INSTALLDIR)$(NAME)-$(MAJORVERSION)$(EXEC_EXT)
+	$(INSTALLDIR)$(NAME)$(EXEC_EXT) -selftest
+	$(call colorecho,"----------------------Success--------------------------------" $(LD))
+	@echo "Binay Location:";
+	$(call colorecho,$(INSTALLDIR)$(NAME)$(EXEC_EXT))
+	@echo
+
 
 ######################################################################
 # Demo
